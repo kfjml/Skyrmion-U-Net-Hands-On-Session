@@ -67,15 +67,15 @@ First, pip packages are installed. Among these, `tensorflow` is the package used
 
 Depending on whether you want to run the Skyrmion U-Net on the CPU or GPU of your machine where you're installing it, execute **only one** of the following commands. If you choose to install using GPU, you must also have a GPU available on your machine. (Alternatively, after completing the setup of one environment, you can install a second environment where you then use the other command, thus having two environments: one with the CPU version and one with the GPU version.)
 
-##### GPU
+##### CPU
 
 Install the following pip packages, when you want it to run exclusively on the CPU
 
 ```
-pip install tensorflow-cpu==2.16.1 albumentations==1.4.3  matplotlib==3.8.4 pandas==2.2.1 chardet==5.2.0
+pip install tensorflow-cpu==2.16.1 albumentations==1.4.3  matplotlib==3.8.4 pandas==2.2.1 chardet==5.2.0 ipympl==0.9.3 ipywidgets==8.1.2 opencv-python-headless==4.9.0.80 wget==3.2
 ```
 
-##### CPU
+##### GPU
 
 Instead, in the case you want to run it on the GPU, run
 
