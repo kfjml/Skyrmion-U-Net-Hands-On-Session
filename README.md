@@ -1,6 +1,6 @@
 # Welcome to the Skyrmion U-Net hands-on repository !
 
-This repository is based on and is an extraction of the following Zenodo repository (v2.0) from Winkler et al.: https://doi.org/10.5281/zenodo.10997175. It is intended for getting started with the Skyrmion U-Net. The authors of this repository are Kilian Leutner, Thomas Brian Winkler, Isaac Labrie-Boulay, Alena Romanova, Hans Fangohr, Mathias Kläui, Raphael Gruber, Fabian Kammerbauer, Klaus Raab, Jakub Zazvorka, Elizabeth Martin Jefremovas and Robert Frömter.
+The dataset of this repository is an extraction of the following Zenodo repository (v2.0) from Winkler et al.: https://doi.org/10.5281/zenodo.10997175. This repository is intended for getting started with the Skyrmion U-Net. The authors of this repository are Kilian Leutner, Thomas Brian Winkler, Isaac Labrie-Boulay, Alena Romanova, Hans Fangohr, Mathias Kläui, Raphael Gruber, Fabian Kammerbauer, Klaus Raab, Jakub Zazvorka, Elizabeth Martin Jefremovas and Robert Frömter.
 
 For any questions regarding this repository, please contact Kilian Leutner at kileutne@students.uni-mainz.de.
 
@@ -10,6 +10,7 @@ For any questions regarding this repository, please contact Kilian Leutner at ki
 Install newest version of miniconda
 
 [https://docs.anaconda.com/free/miniconda/](https://docs.anaconda.com/free/miniconda/)
+
 [https://docs.anaconda.com/free/miniconda/miniconda-install/](https://docs.anaconda.com/free/miniconda/miniconda-install/)
 
 and start/initialize conda
@@ -63,7 +64,7 @@ conda activate skyrmion_unet
 
 Normally, when creating a new conda environment, pip is installed automatically. For confirmation, you can check this when the Skyrmion UNet environment is activated, with e.g. `which pip`. In case it is not installed, execute `conda install pip==23.3.1` for installation of pip.
 
-First, pip packages are installed. Among these, `tensorflow` is the package used for machine learning and neural networks, and the `albumentations` package is used for data augmentation during training. The `matplotlib` package is used for plotting data, especially for MOKE images and their predictions with the Skyrmion U-Net. Furthermore, the `pandas` package is used for data saving, analysis, and editing. Lastly, the `chardet` package, which is a Universal Character Encoding Detector, is needed for the proper functioning of the Jupyter Notebook, which will be installed in the next step. 
+First, pip packages are installed. Among these, `tensorflow` is the package used for machine learning and neural networks, and the `albumentations` package is used for data augmentation during training. The `matplotlib` package is used for plotting data, especially for MOKE images and their predictions with the Skyrmion U-Net. Furthermore, the `pandas` package is used for data saving, analysis, and editing. The `chardet` package, which is a Universal Character Encoding Detector, is needed for the proper functioning of the Jupyter Notebook, which will be installed in the next step. Furthermore, `ipympl` and `ipywidgets` are used for interactive Jupyter notebooks, `opencv-python-headless` for the analysis of image data, and `wget` for downloading an additional dataset for training.
 
 Depending on whether you want to run the Skyrmion U-Net on the CPU or GPU of your machine where you're installing it, execute **only one** of the following commands. If you choose to install using GPU, you must also have a GPU available on your machine. (Alternatively, after completing the setup of one environment, you can install a second environment where you then use the other command, thus having two environments: one with the CPU version and one with the GPU version.)
 
