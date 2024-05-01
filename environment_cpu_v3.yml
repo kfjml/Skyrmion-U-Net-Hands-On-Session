@@ -1,0 +1,18 @@
+name: skyrmion_unet_cpu
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - notebook
+  - numba
+  - pip
+  - pip:
+    - tensorflow-cpu
+    - albumentations
+    - matplotlib
+    - pandas
+    - chardet
+    - ipympl
+    - ipywidgets
+    - opencv-python-headless
+    - wget
