@@ -40,7 +40,7 @@ In the case that this installation **does not** work and returns an error (which
 conda env create -f environment_cpu_v2.yml
 ```
 
-`environment_cpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_cpu` environment was already created. Before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
+`environment_cpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_cpu` environment was already created. In this case, before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
 
 ```
 conda env create -f environment_cpu_v3.yml
@@ -70,7 +70,7 @@ In the case that this installation **does not** work and returns an error (which
 conda env create -f environment_gpu_v2.yml
 ```
 
-`environment_gpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_gpu` environment was already created. Before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
+`environment_gpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_gpu` environment was already created. In this case, before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
 
 ```
 conda env create -f environment_gpu_v3.yml
