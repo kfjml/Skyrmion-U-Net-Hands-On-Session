@@ -40,13 +40,13 @@ In the case that this installation **does not** work and returns an error (which
 conda env create -f environment_cpu_v2.yml
 ```
 
-`environment_cpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 4) is not specified. It will automatically search for a suitable package version. If this installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
+`environment_cpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_cpu` environment was already created. Before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
 
 ```
 conda env create -f environment_cpu_v3.yml
 ```
 
-`environment_cpu_v3.yml` is also a YAML file, but none of the various Python packages have a specified version. Suitable versions of the packages for the device will be automatically searched.
+`environment_cpu_v3.yml` is also a YAML file, but none of the various Python packages have a specified version. Suitable versions of the packages for the device will be automatically searched. Here, it might also be necessary to delete the environment again before this command works, for details see section 4.
 
 #### 2.2 Installation of the GPU environment 
 
@@ -70,13 +70,13 @@ In the case that this installation **does not** work and returns an error (which
 conda env create -f environment_gpu_v2.yml
 ```
 
-`environment_gpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 4) is not specified. It will automatically search for a suitable package version. If this installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
+`environment_gpu_v2.yml` is also a YAML file, but in this case, the TensorFlow package version (important package, details see section 5) is not specified. It will automatically search for a suitable package version. It's possible that during the previous installation attempt, the `skyrmion_unet_gpu` environment was already created. Before this new installation can proceed successfully, the environment must be deleted. This process is explained in section 4. If this second installation also **does not** work, try the following command (**do not** execute if either of the previous environment installation commands succeeded):
 
 ```
 conda env create -f environment_gpu_v3.yml
 ```
 
-`environment_gpu_v3.yml` is also a YAML file, but none of the various Python packages have a specified version. Suitable versions of the packages for the device will be automatically searched.
+`environment_gpu_v3.yml` is also a YAML file, but none of the various Python packages have a specified version. Suitable versions of the packages for the device will be automatically searched. Here, it might also be necessary to delete the environment again before this command works, for details see section 4.
 
 ### 3 Using the skyrmion U-Net
 
@@ -94,15 +94,25 @@ jupyter notebook
 
 This command will provide you with a localhost address, which you can then open in your web browser to access the Jupyter Notebook. Then you can try out the Jupyter notebooks for training (`Training.ipynb`) and prediction (`Prediction.ipynb`) in the main folder of the repository, and also create your own notebooks with own code for the Skyrmion U-Net.
 
-### 4 Further informations
+### 4 Deleting installed environments
 
-#### 4.1 Explanation of the packages installed in the environment
+If you no longer want to have the installed Skyrmion U-Net environments after the Hands-On session, or if there were any issues during the installation process and you want to remove the environment to install the environment with the same name (standard names `skyrmion_unet_cpu` and `skyrmion_unet_gpu` are used in the YAML files) again with another YAML file, execute the following command along with the associated environment name, which is in the following command `skyrmion_unet_cpu` (the standard name for the CPU environment):
+
+```
+conda remove -n skyrmion_unet_cpu --all
+```
+
+During deletion, you will be prompted to confirm the removal of certain files and folders. Please press `y` here.
+
+### 5 Further informations
+
+#### 5.1 Explanation of the packages installed in the environment
 
 `pip` is a Python package management system that is used together with Anaconda/Miniconda in the environment. `tensorflow` is the package used for machine learning and neural networks, and the `albumentations` package is used for data augmentation during training. The `matplotlib` package is used for plotting data, especially for MOKE images and their predictions with the Skyrmion U-Net. Furthermore, the `pandas` package is used for data saving, analysis, and editing. The `chardet` package, which is a Universal Character Encoding Detector, is needed for the proper functioning of the Jupyter Notebook, which will be installed in the next step. Furthermore, `ipympl` and `ipywidgets` are used for interactive Jupyter notebooks, `opencv-python-headless` for the analysis of image data, and `wget` for downloading an additional dataset for training. The packages `numba` translates Python code into machine code, thus speeding up Python code. This is used to make the written code in the Jupyter Notebooks faster. The other package that is installed is `jupyter notebook`, which allows for writing interactive code in notebooks, especially Python code.
 
-#### 4.2 Manual setup
+#### 5.2 Manual setup
 
-##### 4.2.1 Creating & activating conda environment 
+##### 5.2.1 Creating & activating conda environment 
 
 Create a new environment with Python 3.11 and assign it a new environment name, for example, `skyrmion_unet`
 
@@ -118,7 +128,7 @@ Activate this enviorment with the same name, in this case `skyrmion_unet`
 conda activate skyrmion_unet
 ```
 
-##### 4.2.2 Installing pip packages
+##### 5.2.2 Installing pip packages
 
 First, you need to install `pip`. To do this, execute:
 
@@ -146,7 +156,7 @@ Instead, in the case you want to run it on the GPU, run
 pip install tensorflow[and-cuda]==2.16.1 albumentations==1.4.3  matplotlib==3.8.4 pandas==2.2.1 chardet==5.2.0 ipympl==0.9.3 ipywidgets==8.1.2 opencv-python-headless==4.9.0.80 wget==3.2
 ```
 
-##### 4.2.3 Installing conda package
+##### 5.2.3 Installing conda package
 
 Additionally, conda packages need to be installed.  To install the packages, execute the following command:
 
