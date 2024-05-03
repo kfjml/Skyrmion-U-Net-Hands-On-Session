@@ -118,7 +118,7 @@ The prediction notebook (`Prediction.ipynb`) is designed to work completely with
 
 ### 5 Deleting installed environments
 
-If you no longer want to have the installed Skyrmion U-Net environments after the Hands-On session, or if there were any issues during the installation process and you want to remove the environment to install the environment with the same name (standard names `skyrmion_unet_cpu` and `skyrmion_unet_gpu` are used in the YAML files) again with another YAML file, execute the following command along with the associated environment name, which is in the following command `skyrmion_unet_cpu` (the standard name for the CPU environment):
+If you no longer want to have the installed Skyrmion U-Net environments after the Hands-On session, or if there were any issues during the installation process and you want to remove the environment to install the environment with the same name (the standard name `skyrmion_unet_cpu` is used for the CPU environment, and `skyrmion_unet_gpu` is used for the GPU environment, in the YAML files) again with another YAML file, execute the following command along with the associated environment name, which is in the following command `skyrmion_unet_cpu` (the standard name for the CPU environment):
 
 ```
 conda remove -n skyrmion_unet_cpu --all
@@ -152,7 +152,7 @@ Select `Runtime` -> `Change runtime type` and choose `T4 GPU`. This will attempt
 
 You need to perform each step for both Jupyter Notebooks (`Prediction.ipynb` and `Training.ipynb`) shortly before the start of the hands-on session (or if you want to execute these notebooks via Colab outside the hands-on session, what you are welcome to do).
 
-If you have access to the `T4 GPU`, you can execute the second part of `Training.ipynb`, where a large U-Net is trained on a large dataset. For this, a large GPU is required, and the `T4 GPU` is perfectly suitable for this task. This is also a practical tool if you want to train a large network on your own large dataset after the hands-on session and do not have a device available.
+If you have access to the `T4 GPU`, you can execute the second part of `Training.ipynb`, where a large U-Net is trained on a large dataset. For this, a large GPU is required, and the `T4 GPU` is perfectly suitable for this task. This is also a practical tool if you want to train a large network on your own large dataset after the hands-on session and do not have a GPU device available.
 
 ### 7 Further informations
 
