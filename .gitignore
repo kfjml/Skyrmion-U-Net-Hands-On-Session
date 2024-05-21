@@ -2,3 +2,5 @@
 extracted_skyrmion_data_table.csv
 training/
 zenodo_dataset/
+tmp/
+result.zip
