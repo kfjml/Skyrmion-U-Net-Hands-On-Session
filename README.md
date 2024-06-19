@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kfjml/Skyrmion-U-Net-Hands-On-Session/HEAD?labpath=Skyrmion_U-Net_Editor.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kfjml/Skyrmion-U-Net-Hands-On-Session/HEAD?labpath=Editor.ipynb)
 
 # Welcome to the Skyrmion U-Net hands-on repository !
 
