@@ -110,11 +110,11 @@ Afterwards start a jupyter notebook with
 jupyter notebook
 ```
 
-This command will provide you with a localhost address, which you can then open in your web browser to access the Jupyter Notebook. Then you can try out the Jupyter notebooks for prediction (`Prediction.ipynb`) and training (`Training.ipynb`) in the main folder of the repository, and also create your own notebooks with own code for the Skyrmion U-Net. 
+This command will provide you with a localhost address, which you can then open in your web browser to access the Jupyter Notebook. Then you can try out the Jupyter notebooks for prediction (`Prediction_tutorial.ipynb`) and training (`Training_tutorial.ipynb`) in the main folder of the repository, and also create your own notebooks with own code for the Skyrmion U-Net. 
 
 In these notebooks, please execute the cells sequentially from top to bottom (execution of a cell: when a cell is selected, press shift+enter or click the run button (play button symbol)). In the prediction notebook, you can interactively modify the outputs using the displayed GUI. If you want to change these cells with a GUI again after executing other cells, please execute these cells again.
 
-The prediction notebook (`Prediction.ipynb`) is designed to work completely with execution on a regular CPU. In the training notebook (`Training.ipynb`), you can also execute on the CPU in the first part; it is designed to train a small U-Net, which can also be trained on the CPU. For the second part, a large U-Net is trained on a large dataset. A GPU is recommended for this, but the focus of the hands-on session does absolutely not lie on this second part of the training notebook.
+The prediction notebook (`Prediction_tutorial.ipynb`) is designed to work completely with execution on a regular CPU. In the training notebook (`Training_tutorial.ipynb`), you can also execute on the CPU in the first part; it is designed to train a small U-Net, which can also be trained on the CPU. For the second part, a large U-Net is trained on a large dataset. A GPU is recommended for this, but the focus of the hands-on session does absolutely not lie on this second part of the training notebook.
 
 ### 5 Deleting installed environments
 
@@ -132,11 +132,11 @@ Please only do this if you are unable to manage the local installation. The serv
 
 #### 6.1 Binder
 
-You can open this repository online using the BinderHub from `mybinder.org`, view the notebooks, and execute them. The `Prediction.ipynb` notebook, which demonstrates the prediction of Skyrmion U-Nets and allows for prediction on own Kerr images, works. In the `Training.ipynb` notebook, cells can be executed, but training itself does not work because the resources provided by `mybinder.org` are insufficient for that purpose. At` mybinder.org`, only execution on CPU is possible.
+You can open this repository online using the BinderHub from `mybinder.org`, view the notebooks, and execute them. The `Prediction_tutorial.ipynb` notebook, which demonstrates the prediction of Skyrmion U-Nets and allows for prediction on own Kerr images, works. In the `Training_tutorial.ipynb` notebook, cells can be executed, but training itself does not work because the resources provided by `mybinder.org` are insufficient for that purpose. At` mybinder.org`, only execution on CPU is possible.
 
-It may take a while for the repository to load and become executable after clicking on the corresponding link for this repository. `Prediction.ipynb` will open automatically. You can also open the `Training.ipynb` notebook in MyBinder (button on the left sidebar). If there is too much traffic on MyBinder, execution may not be possible. Therefore, only use this tool during the hands-on session if you cannot manage the installation yourself, to give others who cannot manage the installation the opportunity to use Binder. Outside of the hands-on session, feel free to use MyBinder, where executing and making predictions on your own data should work; the corresponding notebook `Prediction.ipynb` will, as mentioned earlier, open automatically.
+It may take a while for the repository to load and become executable after clicking on the corresponding link for this repository. `Prediction_tutorial.ipynb` will open automatically. You can also open the `Training_tutorial.ipynb` notebook in MyBinder (button on the left sidebar). If there is too much traffic on MyBinder, execution may not be possible. Therefore, only use this tool during the hands-on session if you cannot manage the installation yourself, to give others who cannot manage the installation the opportunity to use Binder. Outside of the hands-on session, feel free to use MyBinder, where executing and making predictions on your own data should work; the corresponding notebook `Prediction_tutorial.ipynb` will, as mentioned earlier, open automatically.
 
-To open this repository on `mybinder.org`, please click the following button: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kfjml/Skyrmion-U-Net-Hands-On-Session/HEAD?labpath=Prediction.ipynb) 
+To open this repository on `mybinder.org`, please click the following button: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kfjml/Skyrmion-U-Net-Hands-On-Session/HEAD?labpath=Editor.ipynb) 
 
 #### 6.2 Google Colab
 
@@ -146,13 +146,13 @@ To execute the Jupyter Notebooks needed in the session, please follow these step
 
 Open [https://colab.research.google.com/](https://colab.research.google.com/) (and sign in with your Google account if you haven't already).
 
-Afterwards, open a notebook (the dialog appears automatically or click on File -> Open Notebook) and select `GitHub` in the dialog. Then, provide the URL of this repository as the `GitHub URL`, which is `https://github.com/kfjml/Skyrmion-U-Net-Hands-On-Session`, and select one of the two notebooks, `Prediction.ipynb` (the slightly more important notebook) or `Training.ipynb`. After that, the notebook opens.
+Afterwards, open a notebook (the dialog appears automatically or click on File -> Open Notebook) and select `GitHub` in the dialog. Then, provide the URL of this repository as the `GitHub URL`, which is `https://github.com/kfjml/Skyrmion-U-Net-Hands-On-Session`, and select one of the two notebooks, `Prediction_tutorial.ipynb` (the slightly more important notebook) or `Training_tutorial.ipynb`. After that, the notebook opens.
 
 Select `Runtime` -> `Change runtime type` and choose `T4 GPU`. This will attempt to execute the session on the GPU. It may happen that later on, you receive a message that the GPU is not available. In this case, in the free version, which is completely sufficient for the hands-on session, the execution will be done only on the CPU, although execution on the GPU is much faster (the notebooks have been designed so that execution on the CPU should also work). Now, when you execute the first cell, the runtime begins (which can last approximately 2 hours). You **must** execute this cell at the beginning or just before the start of the hands-on session because important packages will be installed. (for the execution of a cell: when a cell is selected, press shift+enter or click the run button (play button symbol)). The installation takes some time, and after that, you need to restart the session (which is also indicated to you). After restarting the session, you must execute the first cell again. Then, you can also execute the other cells.
 
-You need to perform each step for both Jupyter Notebooks (`Prediction.ipynb` and `Training.ipynb`) shortly before the start of the hands-on session (or if you want to execute these notebooks via Colab outside the hands-on session, what you are welcome to do).
+You need to perform each step for both Jupyter Notebooks (`Prediction_tutorial.ipynb` and `Training_tutorial.ipynb`) shortly before the start of the hands-on session (or if you want to execute these notebooks via Colab outside the hands-on session, what you are welcome to do).
 
-If you have access to the `T4 GPU`, you can execute the second part of `Training.ipynb`, where a large U-Net is trained on a large dataset. For this, a large GPU is required, and the `T4 GPU` is perfectly suitable for this task. This is also a practical tool if you want to train a large network on your own large dataset after the hands-on session and do not have a GPU device available.
+If you have access to the `T4 GPU`, you can execute the second part of `Training_tutorial.ipynb`, where a large U-Net is trained on a large dataset. For this, a large GPU is required, and the `T4 GPU` is perfectly suitable for this task. This is also a practical tool if you want to train a large network on your own large dataset after the hands-on session and do not have a GPU device available.
 
 ### 7 Further informations
 
