@@ -142,7 +142,7 @@ class MaskAnalysis:
             quant[i]["qcb"] = qcb = plt.colorbar(qim,cax=qax[2],label=quant[i]["quant"])#,location='left')
             qax[0].set_title(quant[i]["title"])
             qax[0].set_xlabel(quant[i]["quant"])
-            qax[0].set_ylabel("Probability")
+            qax[0].set_ylabel("Frequency")
             
         self.fig.tight_layout()
 
@@ -369,9 +369,9 @@ class PosAnalysis:
         self.ax[0].grid(False)
         self.ax[1].set_xlabel(r"Skyrmion-Skyrmion distance [pixel]")
         #self.ax[1].legend()
-        self.ax[1].set_ylabel(r"Probability")
-        self.ax[4].set_ylabel(r"Probability")
-        self.ax[6].set_ylabel(r"Probability")
+        self.ax[1].set_ylabel(r"Frequency")
+        self.ax[4].set_ylabel(r"Frequency")
+        self.ax[6].set_ylabel(r"Frequency")
         self.ax[1].set_title("Skyrmion-Skyrmion statistic")
         self.ax[4].set_title(r"$\Psi_6$ analysis")
         self.ax[6].set_title(r"$\Psi_4$ analysis")
@@ -400,7 +400,98 @@ class PosAnalysis:
         else:
             self.voronoi = None
             self.delaunay = None
+
+    @staticmethod
+    def get_distance_stat(posl,lcon):
+        ld = np.zeros((len(lcon),3))
+        posxl,posyl,distl = [],[],[]
+        for ix,(a,b) in enumerate(lcon):
+            mpos = 0.5*(posl[a]+posl[b])
+            ld[ix,0] = mpos[0]
+            ld[ix,1] = mpos[1]
+            ld[ix,2] = np.linalg.norm(posl[a]-posl[b])
+        return ld
+
+    @staticmethod
+    def get_psi(posl,lcon,S,n):
+        #ld = np.zeros((len(S),3))
+        ld = {}
         
+        for e,ix0 in enumerate(S):
+            tmpl = np.setdiff1d(np.unique(lcon[np.any(lcon==ix0,axis=1)]),[ix0])
+            p0 = posl[ix0]
+            l,o = 0.0,0.0
+            for ix1 in tmpl:
+                p1 = posl[ix1]
+                v0 = p1-p0
+                l0 = np.sqrt(v0[0]**2+v0[1]**2)
+                theta =  np.arctan2(v0[1]/l0,v0[0]/l0)
+                o += np.exp(n*1j*theta)
+                l += l0
+            #posxl.append(posl[ix0,0])
+            #posyl.append(posl[ix0,1])
+            if len(tmpl)==0:
+                print(np.unique(lcon[np.any(lcon==ix0,axis=1)]))
+            #ol.append(np.abs(o/len(tmpl)))
+            #meanl.append(l/len(tmpl))
+            ld[ix0] = (np.abs(o/len(tmpl)),l/len(tmpl))
+        #print(np.sum(np.abs(posl[S,0]-np.array(posxl))),np.sum(np.abs(posl[S,1]-np.array(posyl))))
+        
+        return ld
+        
+    @staticmethod
+    def get_delaunay_filter(posl,delaunay,min_angle_range=15,psi4=False):
+        distance = []
+        #select out triangles with small angles (only occurs at the boundary of the image; therefore, they do not represent real skyrmion distances)
+        lallcon = []
+        for ele in delaunay.simplices:
+            for i in range(len(ele)):
+                a,b = ele[i],ele[(i+1)%len(ele)]
+                lallcon.append([min(a,b),max(a,b)])
+        lcon,ncon = np.unique(np.array(lallcon),axis=0,return_counts=True)
+        lbond = set([tuple(ele) for ele in lcon[ncon!=2]])
+    
+        lcon,lcon1,lcon2 = [],[],[]
+        for it,ele in enumerate(delaunay.simplices):
+            ok = True
+            for i in range(len(ele)):
+                v1,v2 = posl[ele[(i+1)%len(ele)]]-posl[ele[i]],posl[ele[(i-1)%len(ele)]]-posl[ele[i]]
+                if not (np.pi/180*min_angle_range<=np.arccos(np.clip(np.dot(v1,v2)/np.sqrt(np.dot(v1,v1)*np.dot(v2,v2)),-1,1))):#<=np.pi/180*self.min_max_angle_range[1]):
+                    ok = False
+                    break
+            if ok:
+                tmpl = []
+                for i in range(len(ele)):
+                    a,b = ele[i],ele[(i+1)%len(ele)]
+                    tmpl.append([np.linalg.norm(posl[a]-posl[b]),min(a,b),max(a,b)])
+                tmpl = sorted(tmpl)
+                if psi4==True:
+                    lzu = [lcon, lcon, lcon2]
+                else:
+                    lzu = [lcon, lcon, lcon]
+                for i, lcon_list in zip(range(3), lzu):
+                    a, b = tmpl[i][1], tmpl[i][2]
+                    if (a, b) not in lbond:
+                        lcon_list.append([a, b])
+                    else:
+                        lcon1.append([a, b])
+            else:
+                for i in range(len(ele)):
+                    a,b = ele[i],ele[(i+1)%len(ele)]
+                    lcon1.append([min(a,b),max(a,b)])
+    
+        lcon,lcon1,lcon2 = np.array(lcon),np.array(lcon1),np.array(lcon2)
+        lcon,ncon = np.unique(lcon,axis=0,return_counts=True) 
+        lcon1,ncon1 = np.unique(lcon1,axis=0,return_counts=True)
+        l1 = np.unique(lcon)
+        l2 = np.unique(lcon1)
+        S = np.setdiff1d(l1,l2)
+        nf = np.any(np.isin(lcon,S),axis=1)
+        lcon1 = np.vstack((lcon1,lcon[~nf]))
+        lcon = lcon[nf]
+        lcon2,ncon2 = np.unique(lcon2,axis=0,return_counts=True)
+        return lcon,lcon1,lcon2,S
+    
     def analysis_2(self):
         #return None
         while len(self.lobj)>0:
@@ -408,60 +499,36 @@ class PosAnalysis:
             obj.remove()
         
         
-        self.distance = []
+        
         if (self.delaunay is not None) and (self.voronoi is not None):
-            #selector out triangles with small angles (only occurs at the boundary of the image; therefore, they do not represent real skyrmion distances)
-            lcon,lcon1 = [],[]
-            l1,l2 = set(),set()
-            for ele in self.delaunay.simplices:
-                ok = True
-                for i in range(len(ele)):
-                    v1,v2 = self.posl[ele[(i+1)%len(ele)]]-self.posl[ele[i]],self.posl[ele[(i-1)%len(ele)]]-self.posl[ele[i]]
-                    if not (np.pi/180*self.min_angle_range<=np.arccos(np.clip(np.dot(v1,v2)/np.sqrt(np.dot(v1,v1)*np.dot(v2,v2)),-1,1))):#<=np.pi/180*self.min_max_angle_range[1]):
-                        ok = False
-                        break
-                if ok:
-                    for i in range(len(ele)):
-                        a,b = ele[i],ele[(i+1)%len(ele)]
-                        lcon.append((min(a,b),max(a,b)))
-                        l1.add(a)
-                        l1.add(b)
+            #lo.append([self.posl[ix0][0],self.posl[ix0][1],o6,o4,l,ix0])
+            lcon,lcon1,lcon2,S = self.get_delaunay_filter(self.posl,self.delaunay,self.min_angle_range,psi4=False)
+            self.ld = ld = self.get_distance_stat(self.posl,lcon)
+            psi6order = self.get_psi(self.posl,lcon,S,6)
+            lcon_psi4,lcon1_psi4,lcon2_psi4,S_psi4 = self.get_delaunay_filter(self.posl,self.delaunay,self.min_angle_range,psi4=True)
+            psi4order = self.get_psi(self.posl,lcon_psi4,S_psi4,4)
+
+            lo = np.zeros((len(self.posl),6))
+            for ix0 in range(len(self.posl)):
+                lo[ix0,0] = self.posl[ix0,0]
+                lo[ix0,1] = self.posl[ix0,1]
+                
+                if ix0 in psi6order:
+                    lo[ix0,2] = psi6order[ix0][0]
+                    lo[ix0,4] = psi6order[ix0][1] 
                 else:
-                    for i in range(len(ele)):
-                        a,b = ele[i],ele[(i+1)%len(ele)]
-                        lcon1.append((min(a,b),max(a,b)))
-                        l2.add(a)
-                        l2.add(b)
-                    
-            lcon = list(set(lcon))
-            lcon1 = list(set(lcon1)-set(lcon))
-            ld = []
-            for a,b in lcon:
-                mpos = 0.5*(self.posl[a]+self.posl[b])
-                ld.append([mpos[0],mpos[1],np.linalg.norm(self.posl[a]-self.posl[b])])
-            self.ld = ld = np.array(ld)
-            lo = []
-            S = np.array(list(l1-l2))
-            for ix0 in S:
-                tmpl = []
-                for a,b in lcon:
-                    if a==ix0: tmpl.append(b)
-                    if b==ix0: tmpl.append(a)
-                tmpl = list(set(tmpl))
-                p0 = self.posl[ix0]
-                l,o6,o4 = 0.0,0.0,0.0
-                for ix1 in tmpl:
-                    p1 = self.posl[ix1]
-                    v0 = p1-p0
-                    l0 = np.sqrt(v0[0]**2+v0[1]**2)
-                    theta = np.arccos(v0[0]/l0)
-                    o6 += np.exp(6j*theta)
-                    o4 += np.exp(4j*theta)
-                    l += l0
-                o6,o4,l = np.abs(o6/len(tmpl)),np.abs(o4/len(tmpl)),l/len(tmpl)
-                lo.append([self.posl[ix0][0],self.posl[ix0][1],o6,o4,l,ix0])
+                    lo[ix0,2] = np.nan
+                    lo[ix0,4] = np.nan
+
+                if ix0 in psi4order:
+                    lo[ix0,3] = psi4order[ix0][0]
+                else:
+                    lo[ix0,3] = np.nan
+                
+                lo[ix0,5] = ix0
+                
+            #[self.posl[ix0][0],self.posl[ix0][1],o6,o4,l,ix0]
             self.lo = lo = np.array(lo)
-            #self.distance = [np.linalg.norm(self.posl[a]-self.posl[b]) for a,b in lcon]
             
             for ele in self.voronoi.regions:
                 if len(ele)==0 or len(list(filter(lambda x:x==-1,ele)))>0: continue
@@ -494,7 +561,8 @@ class PosAnalysis:
             
             if len(ld[:,2])>0:
                 yh,xh,histobj = self.ax[1].hist(ld[:,2],color='#1f77b4',density=True,bins=40)
-                mean,sigma = np.mean(ld[:,2]),np.std(ld[:,2])
+                nanmask = ~np.isnan(ld[:,2])
+                mean,sigma = np.mean(ld[nanmask,2]),np.std(ld[nanmask,2])
                 #t = np.linspace(np.min(ld[:,2]),np.max(ld[:,2]),100)
                 #pl = self.ax[1].plot(t,1/np.sqrt(2*np.pi*sigma**2)*np.exp(-(t-mean)**2/(2*sigma**2)),color="red")[0]
                 histmean = self.ax[1].axvline(np.mean(ld[:,2]),color="red",lw=3,label=fr"Mean value: (${mean:.2f}\pm {sigma:.2f}$) pixel")
@@ -505,7 +573,8 @@ class PosAnalysis:
 
             if len(lo)>0:
                 yh,xh,histobj = self.ax[4].hist(lo[:,2],color='#1f77b4',density=True,bins=40)
-                mean,sigma = np.mean(lo[:,2]),np.std(lo[:,2])
+                nanmask = ~np.isnan(lo[:,2])
+                mean,sigma = np.mean(lo[nanmask,2]),np.std(lo[nanmask,2])
                 #t = np.linspace(np.min(lo[:,2]),np.max(lo[:,2]),100)
                 #pl = self.ax[4].plot(t,1/np.sqrt(2*np.pi*sigma**2)*np.exp(-(t-mean)**2/(2*sigma**2)),color="red")[0]
                 histmean = self.ax[4].axvline(mean,color="red",lw=3,label=fr"Mean value: ${mean:.2f}\pm {sigma:.2f}$")
@@ -514,7 +583,8 @@ class PosAnalysis:
                 self.ax[4].set_xlim(np.min(xh),np.max(xh))
 
                 yh,xh,histobj = self.ax[6].hist(lo[:,3],color='#1f77b4',density=True,bins=40)
-                mean,sigma = np.mean(lo[:,3]),np.std(lo[:,3])
+                nanmask = ~np.isnan(lo[:,3])
+                mean,sigma = np.mean(lo[nanmask,3]),np.std(lo[nanmask,3])
                 #t = np.linspace(np.min(lo[:,3]),np.max(lo[:,3]),100)
                 #pl = self.ax[6].plot(t,1/np.sqrt(2*np.pi*sigma**2)*np.exp(-(t-mean)**2/(2*sigma**2)),color="red")[0]
                 histmean = self.ax[6].axvline(mean,color="red",lw=3,label=fr"Mean value: ${mean:.2f}\pm {sigma:.2f}$")
@@ -563,7 +633,7 @@ def get_video_analysis(fnv,config,tmp_folder,result_file):
                             sigma=config["img_editor"]["sigma"])
     
     sky_unet = SkyUNet()
-    sky_unet.set_model(config["prediction_editor"]["unet_model"][0],config["prediction_editor"]["unet_model"][2])
+    sky_unet.set_model(config["prediction_editor"]["unet_model"][0],model_ver=config["prediction_editor"]["unet_model"][2])
     
     analysis1 = MaskAnalysis()
     analysis1.set_min_max_quant_select_range(config["mask_analysis_editor"]["shape_range"])
@@ -623,7 +693,7 @@ def get_batch_analysis(fnl,config,tmp_folder,result_file):
                             sigma=config["img_editor"]["sigma"])
     
     sky_unet = SkyUNet()
-    sky_unet.set_model(config["prediction_editor"]["unet_model"][0],config["prediction_editor"]["unet_model"][2])
+    sky_unet.set_model(config["prediction_editor"]["unet_model"][0],model_ver=config["prediction_editor"]["unet_model"][2])
     
     analysis1 = MaskAnalysis()
     analysis1.set_min_max_quant_select_range(config["mask_analysis_editor"]["shape_range"])

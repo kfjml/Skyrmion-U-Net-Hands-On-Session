@@ -235,7 +235,7 @@ class UNetPredictionGUI(ipywidgets.VBox):
                 import time
                 t0 = time.time()
             modelt = self.cmodel
-            self.skyunet.set_model(modelt[0],modelt[2])
+            self.skyunet.set_model(modelt[0],model_ver=modelt[2])
             if log:
                 print("set model",time.time()-t0)
                 t0 = time.time()
@@ -597,10 +597,52 @@ class PosAnalysisGUI(ipywidgets.VBox):
         return {"angle_range":self.analysis.get_min_angle_select_range()}
 
 
+class CustomTab(ipywidgets.VBox):
+    def event(self,x):
+        with self.out:
+            for i,ele in enumerate(self.l):
+                if ele==x:
+                    self.children = [self.head,self.ch[i],self.out]
+                    break
+    
+    def __init__(self,children,desc):
+        super().__init__()
+        self.ch = children
+        
+        self.l = [ipywidgets.Button(description=ele) for ele in desc]
+        self.head = ipywidgets.HBox(self.l)
+        self.out = ipywidgets.Output()
+        self.children = [self.head,self.ch[0],self.out]
+        self.layout = ipywidgets.Layout(border='solid 1px')
+
+        for ele in self.l:
+            ele.on_click(self.event)
+
+
+class UButton(ipywidgets.VBox):
+    def __init__(self,desc,func):
+        super().__init__()
+        self.but = ipywidgets.Button(description = desc)
+        self.out = ipywidgets.Output()
+        self.func = func
+        
+        self.but.on_click(self.clickb)
+        self.children = [self.but,self.out]
+
+    def clickb(self,x):
+        self.out.clear_output()
+        with self.out:
+            from google.colab import files
+            self.res = files.upload()
+            if len(self.res.keys())>0:
+                self.func([(ele,self.res[ele]) for ele in  self.res.keys()])
+        self.out.clear_output()
+
 class UNetGUI(ipywidgets.VBox):
-    def __init__(self,models,input_img,tmp_folder,zip_folder,result_file,change_img=True):
+    def __init__(self,models,input_img,tmp_folder,zip_folder,result_file,colab=False,change_img=True):
         super().__init__()
         self.change_img = change_img
+        self.colab = colab
         self.tmp_folder = tmp_folder#"./tmp/"
         self.zip_folder = zip_folder#"zipfolder/"
         self.result_file = result_file#"result"
@@ -614,22 +656,39 @@ class UNetGUI(ipywidgets.VBox):
 
         self.res_button = ipywidgets.Button(description="Reset")
         self.res_button.on_click(self.reset_gui_button)
-        self.fileup = ipywidgets.FileUpload()
-        self.fileup.observe(self.event_fileup,"value")
+        if not colab:
+            self.fileup = ipywidgets.FileUpload()
+            self.fileup.observe(self.event_fileup_ipy,"value")
+        else:
+            self.fileup = UButton("Upload",self.event_fileup)
 
-        self.fileupbatch = ipywidgets.FileUpload(multiple=True,description="Upload images & Batch analysis & Download (after parameter setup via GUI)")
-        self.fileupbatch.layout.width="60%"
-        self.fileupbatch.observe(self.event_filebatch,"value")
+        if not colab:
+            self.fileupbatch = ipywidgets.FileUpload(multiple=True,description="Upload images & Batch analysis & Download (after parameter setup via GUI)")
+            self.fileupbatch.layout.width="60%"
+            self.fileupbatch.observe(self.event_filebatch_ipy,"value")
+    
+            self.fileupvideo = ipywidgets.FileUpload(multiple=False,description="Upload video & Frame analysis & Download (after parameter setup via GUI)")
+            self.fileupvideo.layout.width="60%"
+            self.fileupvideo.observe(self.event_filevideo_ipy,"value")
+        else:
+            self.fileupbatch = UButton("Upload images & Batch analysis & Download (after parameter setup via GUI)",self.process_batch)
+            self.fileupbatch.layout.width="60%"
+            self.fileupbatch.but.layout.width="60%"
+            
+            self.fileupvideo = UButton("Upload video & Frame analysis & Download (after parameter setup via GUI)",self.process_video)
+            self.fileupvideo.layout.width="60%"
+            self.fileupvideo.but.layout.width="60%"
+            
 
-        self.fileupvideo = ipywidgets.FileUpload(multiple=False,description="Upload video & Frame analysis & Download (after parameter setup via GUI)")
-        self.fileupvideo.layout.width="60%"
-        self.fileupvideo.observe(self.event_filevideo,"value")
-
-        self.tab = ipywidgets.Tab([self.editorgui,self.predgui,self.maskanalysisgui,self.posanalysisgui])
-        self.tab.set_title(0,"1) Image Editor")
-        self.tab.set_title(1,"2) Prediction")
-        self.tab.set_title(2,"3) Mask analysis")
-        self.tab.set_title(3,"4) Position analysis")
+        if not colab:
+            self.tab = ipywidgets.Tab([self.editorgui,self.predgui,self.maskanalysisgui,self.posanalysisgui])
+            self.tab.set_title(0,"1) Image Editor")
+            self.tab.set_title(1,"2) Prediction")
+            self.tab.set_title(2,"3) Mask analysis")
+            self.tab.set_title(3,"4) Position analysis")
+        else:
+            self.tab = CustomTab([self.editorgui,self.predgui,self.maskanalysisgui,self.posanalysisgui],
+                                ["1) Image Editor","2) Prediction","3) Mask analysis","4) Position analysis"])
         
         self.outbatch = ipywidgets.Output()
         self.outvideo = ipywidgets.Output()
@@ -648,9 +707,14 @@ class UNetGUI(ipywidgets.VBox):
         with self.outvideo:
             self.outvideo.clear_output()
 
+    def event_fileup_ipy(self,x):
+        with self.outvideo:
+            self.event_fileup([(ele.name,ele.content.tobytes()) for ele in x.new])
+
+        
     def event_fileup(self,x):
         self.reset_gui()
-        bytes = x.new[0].content.tobytes()
+        fn,bytes = x[0]#x.new[0].content.tobytes()
         
         try:
             img = np.array(Image.open(io.BytesIO(bytes)))
@@ -663,15 +727,16 @@ class UNetGUI(ipywidgets.VBox):
             ret,img = cap.read()
     
         self.editorgui(img)
-        self.fileup.unobserve(self.event_fileup,"value")
-        self.fileup.value = ()
-        self.fileup.observe(self.event_fileup,"value")
+        if self.colab:
+            self.fileup.unobserve(self.event_fileup_ipy,"value")
+            self.fileup.value = ()
+            self.fileup.observe(self.event_fileup_ipy,"value")
     
-    def event_filebatch(self,x):
-        self.process_batch(x.new)
+    def event_filebatch_ipy(self,x):
+        self.process_batch([(ele.name,(ele.content.tobytes())) for ele in x.new])#x.new)
 
-    def event_filevideo(self,x):
-        self.process_video(x.new)
+    def event_filevideo_ipy(self,x):
+        self.process_video([(ele.name,(ele.content.tobytes())) for ele in x.new])#x.new)
 
     def process_video(self,x):
         self.clear_output()
@@ -681,31 +746,39 @@ class UNetGUI(ipywidgets.VBox):
         #with self.outvideo:
         config = self.get_config()
         if not ((config["mask_analysis_editor"] is None) or (config["pos_analysis_editor"] is None)):
-            bytes = x[0].content.tobytes()
-            fn_vid = self.tmp_folder+x[0].name
+          #fnl = [(b,a) for a,b in fnl]
+            name,bytes = x[0]
+            #bytes = x[0].content.tobytes()
+            fn_vid = self.tmp_folder+name#x[0].name
             with open(fn_vid,"wb") as f:
                 f.write(bytes)
-            self.fileupvideo.unobserve(self.event_filevideo,"value")
-            self.fileupvideo.value = ()
-            self.fileupvideo.observe(self.event_filevideo,"value")
+            if not self.colab:
+              self.fileupvideo.unobserve(self.event_filevideo_ipy,"value")
+              self.fileupvideo.value = ()
+              self.fileupvideo.observe(self.event_filevideo_ipy,"value")
             
-            file = get_video_analysis(fn_vid,config,self.tmp_folder+self.zip_folder,self.tmp_folder+self.result_file)
+            with self.outvideo:
+              file = get_video_analysis(fn_vid,config,self.tmp_folder+self.zip_folder,self.tmp_folder+self.result_file)
             import os
             os.remove(fn_vid)
             if file is not None:
                 self.clear_output()
                 with self.outvideo:
-                    display(FileLink(file))
+                    if not self.colab:
+                      display(FileLink(file))
+                    else:
+                      from google.colab import files
+                      files.download(file)
+
         else:
-            self.fileupvideo.unobserve(self.event_filevideo,"value")
-            self.fileupvideo.value = ()
-            self.fileupvideo.observe(self.event_filevideo,"value")
+            if not self.colab:
+              self.fileupvideo.unobserve(self.event_filevideo_ipy,"value")
+              self.fileupvideo.value = ()
+              self.fileupvideo.observe(self.event_filevideo_ipy,"value")
             self.clear_output()
             with self.outvideo:
                 print("Set the parameters ! (min. click predict)")
            
-        
-    
     def process_batch(self,fnl):
         self.clear_output()
         with self.outbatch:
@@ -713,20 +786,27 @@ class UNetGUI(ipywidgets.VBox):
         from IPython.display import FileLink,display
         config = self.get_config()
         if not ((config["mask_analysis_editor"] is None) or (config["pos_analysis_editor"] is None)):
-            fnl = [(np.array(Image.open(io.BytesIO(ele.content.tobytes()))),ele.name) for ele in fnl]
-            self.fileupbatch.unobserve(self.event_filebatch,"value")
-            self.fileupbatch.value = ()
-            self.fileupbatch.observe(self.event_filebatch,"value")
-            #with self.outbatch:
-            file = get_batch_analysis(fnl,config,self.tmp_folder+self.zip_folder,self.tmp_folder+self.result_file)
+            #fnl = [(np.array(Image.open(io.BytesIO(ele.content.tobytes()))),ele.name) for ele in fnl]
+            fnl = [(np.array(Image.open(io.BytesIO(b))),a) for a,b in fnl]
+            if not self.colab:
+              self.fileupbatch.unobserve(self.event_filebatch_ipy,"value")
+              self.fileupbatch.value = ()
+              self.fileupbatch.observe(self.event_filebatch_ipy,"value")
+            with self.outbatch:
+                file = get_batch_analysis(fnl,config,self.tmp_folder+self.zip_folder,self.tmp_folder+self.result_file)
             if file is not None:
                 self.clear_output()
                 with self.outbatch:
-                    display(FileLink(file))
+                    if not self.colab:
+                      display(FileLink(file))
+                    else:
+                      from google.colab import files
+                      files.download(file)
         else:
-            self.fileupbatch.unobserve(self.event_filebatch,"value")
-            self.fileupbatch.value = ()
-            self.fileupbatch.observe(self.event_filebatch,"value")
+            if not self.colab:
+              self.fileupbatch.unobserve(self.event_filebatch_ipy,"value")
+              self.fileupbatch.value = ()
+              self.fileupbatch.observe(self.event_filebatch_ipy,"value")
             self.clear_output()
             with self.outbatch:
                 print("Set the parameters ! (min. click predict)")

@@ -71,21 +71,30 @@ class SkyUNet:
         self.model = None
         self.model_ver = 2
         self.fn_model = ""
+        self.input_size = (512,512)
 
-    def set_model(self,fn_model,model_ver=2):
-        if self.fn_model != fn_model:
+    def set_model(self,fn_model,input_size=(512,512),model_ver=2):
+        if self.fn_model != fn_model or self.input_size != input_size:
             if fn_model != "":
                 model = tf.keras.models.load_model(fn_model,compile=False,custom_objects={'MishLayer': MishLayer})
                 if not is_gpu_available():
                     #create identical model, only with pure float_32 policy
-                    nmodel = SkyUNetModel({"name":"unet","input_shape": (512,512), "n_class":3,"filter_multiplier":16,"n_depth":4,
+                    nmodel = SkyUNetModel({"name":"unet","input_shape": input_size, "n_class":3,"filter_multiplier":16,"n_depth":4,
                     "kernel_initialization":"he_normal","dropout":0.1,"kernel_size":(3,3),"upsample_channel_multiplier":8}).get_model()
                     nmodel.set_weights(model.weights)
                     model = nmodel
+                else:
+                    tf.keras.mixed_precision.set_global_policy('mixed_float16')
+                    nmodel = SkyUNetModel({"name":"unet","input_shape": input_size, "n_class":3,"filter_multiplier":16,"n_depth":4,
+                    "kernel_initialization":"he_normal","dropout":0.1,"kernel_size":(3,3),"upsample_channel_multiplier":8}).get_model()
+                    nmodel.set_weights(model.weights)
+                    model = nmodel
+                
                 self.model = model
             else:
                 self.model = None
             self.model_ver = model_ver
+            self.input_size = input_size
             self.fn_model = fn_model
 
     def predict(self,x,batch_size = 5,normalize_255=False):
@@ -117,8 +126,9 @@ class SkyUNet:
             ylabel[ylabel==5] = 2
         return ylabel
 
-    def __call__(self,img,batch_size=5):
-        #split image in 512x512 tiles
+    def __call__(self,img,batch_size=5,ffa=0.2):
+        #split image  in tiles
+        s0,s1 = self.input_size
         oshape = True
         if len(img.shape)==3:
             oshape = False
@@ -126,25 +136,74 @@ class SkyUNet:
             img = img[np.newaxis]
             
         size_img,sizey,sizex = img.shape
-        lix = [((j*512,min((j+1)*512,sizey)),(i*512,min((i+1)*512,sizex))) for j in range(int(np.ceil(sizey/512))) for i in range(int(np.ceil(sizex/512)))]
-        #print("->lix ",len(lix))
-        limgarray = []
-        for iximg in range(size_img):
-            for ele in lix:
-                pimg = img[iximg,ele[0][0]:ele[0][1],ele[1][0]:ele[1][1]]
-                nimg = np.ones((512,512))
-                nimg[:min(512,pimg.shape[0]),:min(512,pimg.shape[1])] = pimg
-                limgarray.append(nimg)
-        limgarray = np.array(limgarray)
-        #Predict label
-        lpredict = self.predict(limgarray,batch_size)
+
+        if sizey==s0 and sizex==s1:
+            pred_label = self.predict(img,batch_size)
+            
+        else:# sizey<s0 or sizex<s1:
+            #print("->")
+            bb = None
+            if sizey<s0 or sizex<s1:
+                tmp = np.zeros((size_img,2*sizey,2*sizex))
+                tmp[:,:sizey,:sizex] = img
+                tmp[:,sizey:2*sizey,:sizex] = img[:,::-1]
+                tmp[:,:sizey,sizex:2*sizex] = img[:,:,::-1]
+                tmp[:,sizey:2*sizey,sizex:2*sizex] = img[:,::-1,::-1]
+                tmp = np.tile(tmp,(1,int(np.ceil(s0/(2*sizey))),int(np.ceil(s1/(2*sizex)))))
+                img = tmp[:,:max(sizey,s0),:max(sizex,s1)]
+                bb = (sizey,sizex)
+                _,sizey,sizex = img.shape
+                
+            bs0 = int(np.ceil(s0*ffa))
+            bs1 = int(np.ceil(s1*ffa))
+            if sizex==s1:
+                bs1 = 0
+            if sizey==s0:
+                bs0 = 0
+            ps0 = s0-2*bs0
+            ps1 = s1-2*bs1
+            lix = [(j*ps0,i*ps1) for j in range(int(np.ceil(sizey/ps0))) for i in range(int(np.ceil(sizex/ps1)))]
+            #print(sizex,sizey,s0,s1,bs0,bs1)
+            #print(lix)
+            limgarray = []
+            
+            def shiftinterval(x0,x1,y0,y1):
+                if y1>x1:
+                    y0,y1 = y0-(y1-x1),y1-(y1-x1)
+                if y0<x0:
+                    y0,y1 = y0-(y0-x0),y1-(y0-x0)
+                return (y0,y1)
+            
+            lbox = []
+            for i0,j0 in lix:
+                box0 = [(i0-bs0,i0+ps0+bs0),(j0-bs1,j0+ps1+bs1)]
+                box1 = [(i0,min(i0+ps0,sizey)),(j0,min(j0+ps1,sizex))]
+                box0[0] = shiftinterval(0,sizey,*box0[0])
+                box0[1] = shiftinterval(0,sizex,*box0[1])
+                box2 = [(box1[0][0]-box0[0][0],box1[0][1]-box0[0][0]),(box1[1][0]-box0[1][0],box1[1][1]-box0[1][0])]
+                #limgarray.append(img[box0[0][0]:box0[0][1],box0[1][0]:box0[1][1]])
+                lbox.append((box0,box1,box2))
         
-        #reconstruct full image from tiles
-        pred_label = np.zeros((size_img,sizey,sizex),dtype=lpredict.dtype)
-        for iximg in range(size_img):
-            ix0 = iximg*len(lix)
-            for i,ele in enumerate(lix):
-                pred_label[iximg,ele[0][0]:ele[0][1],ele[1][0]:ele[1][1]] = lpredict[i+ix0,:ele[0][1]-ele[0][0],:ele[1][1]-ele[1][0]]
+            
+            limgarray = np.zeros((size_img*len(lbox),s0,s1))
+            for iximg in range(size_img):
+                for e in range(len(lbox)):
+                    box0,_,_ = lbox[e]
+                    limgarray[e+iximg*len(lbox)] = img[iximg,box0[0][0]:box0[0][1],box0[1][0]:box0[1][1]]
+            limgarray = np.array(limgarray)
+            #Predict label
+            lpredict = self.predict(limgarray,batch_size)
+            
+            #reconstruct full image from tiles
+            pred_label = np.zeros((size_img,sizey,sizex),dtype=lpredict.dtype)
+            for iximg in range(size_img):
+                for e in range(len(lbox)):
+                    ix0 = iximg*len(lix)+e
+                    _,box1,box2 = lbox[e]
+                    pred_label[iximg,box1[0][0]:box1[0][1],box1[1][0]:box1[1][1]] = lpredict[ix0,box2[0][0]:box2[0][1],box2[1][0]:box2[1][1]]
+            if bb is not None:
+                pred_label = pred_label[:,:bb[0],:bb[1]]
+            
         if oshape:
             return pred_label[0]        
         return pred_label
