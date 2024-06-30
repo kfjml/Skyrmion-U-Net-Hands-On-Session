@@ -719,6 +719,8 @@ class UNetGUI(ipywidgets.VBox):
         try:
             img = np.array(Image.open(io.BytesIO(bytes)))
         except:
+            if not os.path.isdir(self.tmp_folder):
+                os.makedirs(self.tmp_folder)
             fnv = self.tmp_folder+fn
             with open(fnv,"wb") as f:
                 f.write(bytes)
