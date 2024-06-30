@@ -708,8 +708,8 @@ class UNetGUI(ipywidgets.VBox):
             self.outvideo.clear_output()
 
     def event_fileup_ipy(self,x):
-        with self.outvideo:
-            self.event_fileup([(ele.name,ele.content.tobytes()) for ele in x.new])
+        #with self.outvideo:
+        self.event_fileup([(ele.name,ele.content.tobytes()) for ele in x.new])
 
         
     def event_fileup(self,x):
@@ -719,7 +719,7 @@ class UNetGUI(ipywidgets.VBox):
         try:
             img = np.array(Image.open(io.BytesIO(bytes)))
         except:
-            fnv = self.tmp_folder+x.new[0].name
+            fnv = self.tmp_folder+fn
             with open(fnv,"wb") as f:
                 f.write(bytes)
             import cv2
